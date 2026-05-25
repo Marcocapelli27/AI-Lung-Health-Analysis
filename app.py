@@ -34,10 +34,10 @@ if uploaded_file is not None:
     
     # Preprocessing pipeline to match training format (Target size: 150x150, Grayscale)
     with st.spinner("Executing tensor transformations and feature extraction..."):
-        img_resized = image.resize((150, 150))
-        img_gray = img_resized.convert("L")  # Ensure grayscale matrix
-        img_array = np.array(img_gray) / 255.0  # Min-max normalization [0, 1]
-        img_reshaped = np.reshape(img_array, (1, 150, 150, 1))  # Expand to 4D tensor batch
+        img_resized = image.resize((224, 224))
+        img_rgb = img_resized.convert("RGB")  # Ensure 3-channel color matrix to match model
+        img_array = np.array(img_rgb) / 255.0  # Min-max normalization [0, 1]
+        img_reshaped = np.reshape(img_array, (1, 224, 224, 3))  # Expand to 4D tensor batch matching (None, 224, 224, 3)
         
         # Calculate raw neural inference probability
         prediction_score = float(model.predict(img_reshaped)[0][0])
