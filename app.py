@@ -123,6 +123,7 @@ if uploaded_file is not None:
                 except Exception as e:
                     ai_reply = "I apologize, but I encountered a connection error retrieving the clinical data matrix. Please check your API key configuration."
                     st.error(f"System Error Trace: {e}")
+                    st.warning(f"Raw API Diagnostic Output: {response.json()}")
                     st.markdown(ai_reply)
                 
         # 4. Commit the real AI response object to the storage vault
