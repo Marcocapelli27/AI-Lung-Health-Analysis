@@ -9,16 +9,28 @@ st.set_page_config(page_title="Multi-Disease AI Radiology Space", page_icon="ü´
 st.title("ü´Å Advanced Multi-Disease Chest X-Ray Analyzer")
 st.write("Inference engine for classifying COVID-19, Viral Pneumonia, Lung Opacities, or Normal structural variants.")
 
-# --- 1. LOAD MULTI-CLASS MODEL ---
+# --- 1. LOAD MULTI-CLASS MODEL --
 @st.cache_resource
 def load_multi_model():
-    return tf.keras.models.load_model("multi_disease_diagnostic_model.keras")
+    import os
+    import urllib.request
+    
+    model_filename = "multi_disease_diagnostic_model.keras"
+    
+    # PASTE YOUR COPIED RELEASES DOWNLOAD LINK HERE!
+    model_url = "https://github.com/Marcocapelli27/AI-Lung-Health-Analysis/releases/download/v2.0/multi_disease_diagnostic_model.keras"
+    
+    # If the model isn't downloaded into Streamlit's cloud memory yet, fetch it automatically
+    if not os.path.exists(model_filename):
+        with st.spinner("Downloading heavy multi-disease matrix architecture from secure release vault..."):
+            urllib.request.urlretrieve(model_url, model_filename)
+            
+    return tf.keras.models.load_model(model_filename)
 
 try:
     model = load_multi_model()
 except Exception as e:
     st.error(f"Error loading multi-disease configuration: {e}")
-
 # --- 2. IMAGE PREPROCESSING PIPELINE ---
 uploaded_file = st.file_uploader("Upload Patient Chest Radiograph...", type=["jpg", "jpeg", "png"])
 
