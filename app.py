@@ -10,7 +10,7 @@ st.set_page_config(page_title="Multi-Disease AI Radiology Space", page_icon="ðŸ«
 
 st.title("Advanced Multi-Disease Chest X-Ray Analyzer")
 # Updated description to be highly descriptive but similar in length
-st.write("Clinical decision support system providing deep visual feature extraction and differential diagnosis for acute thoracic conditions.")
+st.write("Clinical decision support system providing deep visual analysis and different diagnosis for acute thoracic conditions.")
 
 st.markdown("---")
 
