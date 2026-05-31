@@ -8,7 +8,7 @@ import json
 # --- Page Setup (Removed the 'X' emoji and kept it clean) ---
 st.set_page_config(page_title="Multi-Disease AI Radiology Space", page_icon="🫁", layout="wide") # Changed to wide layout for split-screen
 
-st.title("🫁 Advanced Multi-Disease Chest X-Ray Analyzer")
+st.title("Advanced Multi-Disease Chest X-Ray Analyzer")
 # Updated description to be highly descriptive but similar in length
 st.write("Clinical decision support system providing deep visual feature extraction and differential diagnosis for acute thoracic conditions.")
 
@@ -83,7 +83,7 @@ with col1:
 
 # --- RIGHT SIDE: EXPERT CHAT SPACE ---
 with col2:
-    st.subheader("💬 Expert Consult Chat")
+    st.subheader("👨‍⚕️ Expert Consult Chat")
     
     # Persistent chat memory system
     if "messages" not in st.session_state:
