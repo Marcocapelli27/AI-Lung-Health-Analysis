@@ -13,6 +13,32 @@ st.write("Clinical decision support system providing deep visual feature extract
 
 st.markdown("---")
 
+# --- 💡 NEW: INJECT CSS TO LOCK LEFT COLUMN & ALLOW RIGHT COLUMN TO SCROLL ---
+st.markdown(
+    """
+    <style>
+        /* Target the split-screen columns container */
+        [data-testid="stColumns"] {
+            height: 80vh;
+            overflow: hidden;
+        }
+        /* Lock Left Column in place */
+        [data-testid="column"]:nth-of-type(1) {
+            height: 100%;
+            overflow-y: auto;
+            padding-right: 10px;
+        }
+        /* Make Right Column independently scrollable */
+        [data-testid="column"]:nth-of-type(2) {
+            height: 100%;
+            overflow-y: auto;
+            padding-left: 10px;
+        }
+    </style>
+    """,
+    unsafe_allow_html=True
+)
+
 # --- 1. LOAD MULTI-CLASS MODEL ---
 @st.cache_resource
 def load_multi_model():
@@ -41,7 +67,7 @@ col1, col2 = st.columns([45, 55], gap="large")
 if "diagnostic_context" not in st.session_state:
     st.session_state.diagnostic_context = "No image evaluated yet."
 
-# --- LEFT SIDE: IMAGE PREPROCESSING & DIAGNOSTICS ---
+# --- LEFT SIDE: IMAGE PREPROCESSING & DIAGNOSTICS (LOCKED VIEWPORT) ---
 with col1:
     st.subheader("📸 Radiograph Analysis Workspace")
     uploaded_file = st.file_uploader("Upload Patient Chest Radiograph...", type=["jpg", "jpeg", "png"])
@@ -78,7 +104,7 @@ with col1:
             st.write(pct_text)
             st.progress(float(score))
 
-# --- RIGHT SIDE: EXPERT CHAT SPACE ---
+# --- RIGHT SIDE: EXPERT CHAT SPACE (INDEPENDENTLY SCROLLABLE) ---
 with col2:
     st.subheader("💬 Expert Consult Chat")
     
@@ -92,12 +118,9 @@ with col2:
         with st.chat_message(message["role"]):
             st.markdown(message["content"])
 
-    # --- NEW FEATURE: ONE-CLICK AUTOMATED PROMPTS ---
+    # --- ONE-CLICK AUTOMATED PROMPTS ---
     st.markdown("##### ⚡ Quick Clinical Inquiries")
-    
-    # Lay out buttons horizontally using small columns
     p_col1, p_col2, p_col3 = st.columns(3)
-    
     suggested_prompt = None
     
     with p_col1:
@@ -112,9 +135,7 @@ with col2:
         if st.button("🔬 Opacity vs Pneumonia", use_container_width=True):
             suggested_prompt = "What is the physiological difference between a general Lung Opacity and Viral Pneumonia on a chest radiograph?"
 
-    # Capture either a button click OR a manual typing input
     user_prompt = st.chat_input("Inquire about this complex matrix breakdown...")
-    
     if suggested_prompt:
         user_prompt = suggested_prompt
 
@@ -131,13 +152,13 @@ with col2:
                     api_key = st.secrets["GEMINI_API_KEY"]
                     url = f"https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key={api_key}"
 
+                    # NEW UPDATED COMPACT SYSTEM INSTRUCTION
                     system_instruction = (
-                        "You are an expert clinical AI radiologist assistant. "
+                        "You are a concise clinical AI radiologist. "
                         f"Current Case Analytical Context: {st.session_state.diagnostic_context}. "
                         "Instructions: Answer the clinician's or patient's queries thoroughly but concise manner, with biochemical and structural explanations that aren't extended too long. "
                         "When discussing findings, highlight differences between ground-glass opacities (COVID-19), standard consolidations (Pneumonia), "
                         "and clear fields (Normal). Warn users that neural networks offer probabilities, not legal diagnoses, and must be verified by a physician."
-                        
                     )
 
                     history_context = ""
@@ -162,6 +183,4 @@ with col2:
                     st.markdown(ai_reply)
                 
         st.session_state.messages.append({"role": "assistant", "content": ai_reply})
-        
-        # Rerun the app to cleanly refresh the chat UI state after a button push
         st.rerun()
