@@ -5,12 +5,11 @@ import numpy as np
 import requests
 import json
 
-# --- Page Setup (Removed the 'X' emoji and kept it clean) ---
-st.set_page_config(page_title="Multi-Disease AI Radiology Space", page_icon="🫁", layout="wide") # Changed to wide layout for split-screen
+# --- Page Setup ---
+st.set_page_config(page_title="Multi-Disease AI Radiology Space", page_icon="🫁", layout="wide")
 
-st.title("Advanced Multi-Disease Chest X-Ray Analyzer")
-# Updated description to be highly descriptive but similar in length
-st.write("Clinical decision support system providing deep visual analysis and different diagnosis for acute thoracic conditions.")
+st.title("🫁 Advanced Multi-Disease Chest X-Ray Analyzer")
+st.write("Clinical decision support system providing deep visual feature extraction and differential diagnosis for acute thoracic conditions.")
 
 st.markdown("---")
 
@@ -36,11 +35,11 @@ except Exception as e:
     st.error(f"Error loading multi-disease configuration: {e}")
 
 # --- CREATE SPLIT SCREEN COLUMNS ---
-# Left Column takes 45% width for the X-ray and stats; Right Column takes 55% for the chat workspace
 col1, col2 = st.columns([45, 55], gap="large")
 
 # Global memory string passed down to instruct the live chatbot brain
-diagnostic_context = "No image evaluated yet."
+if "diagnostic_context" not in st.session_state:
+    st.session_state.diagnostic_context = "No image evaluated yet."
 
 # --- LEFT SIDE: IMAGE PREPROCESSING & DIAGNOSTICS ---
 with col1:
@@ -64,18 +63,16 @@ with col1:
         primary_finding = class_labels[top_prediction_idx]
         confidence_score = raw_predictions[top_prediction_idx] * 100
         
-        diagnostic_context = f"Primary Finding: {primary_finding} ({confidence_score:.1f}% confidence). " \
+        st.session_state.diagnostic_context = f"Primary Finding: {primary_finding} ({confidence_score:.1f}% confidence). " \
                              f"Full Breakdown Profile: " + ", ".join([f"{lbl}: {val*100:.1f}%" for lbl, val in zip(class_labels, raw_predictions)])
         
         st.markdown("### 📊 Automated Neural Network Diagnostics")
         
-        # Cleaned up alert banners (Removed heavy colored backgrounds)
         if primary_finding == 'Normal Lung Fields':
             st.info(f"**Clear Screening:** {primary_finding} detected.")
         else:
             st.error(f"**Pathology Alert:** High structural correlation with {primary_finding}.")
             
-        # Render neat metric bars with exact percentages right next to the labels
         for lbl, score in zip(class_labels, raw_predictions):
             pct_text = f"{lbl} — **{score*100:.1f}%**"
             st.write(pct_text)
@@ -83,22 +80,46 @@ with col1:
 
 # --- RIGHT SIDE: EXPERT CHAT SPACE ---
 with col2:
-    st.subheader("👨‍⚕️ Expert Consult Chat")
+    st.subheader("💬 Expert Consult Chat")
     
-    # Persistent chat memory system
     if "messages" not in st.session_state:
         st.session_state.messages = [
-            # Swapped out the robot introductory box text for a cleaner presentation
             {"role": "assistant", "content": "Welcome to the clinical workspace. The multi-disease differential matrix has been initialized. Let's discuss structural differences or triage pathways."}
         ]
 
-    # Displays chat history directly inside column 2
+    # Displays chat history
     for message in st.session_state.messages:
         with st.chat_message(message["role"]):
             st.markdown(message["content"])
 
+    # --- NEW FEATURE: ONE-CLICK AUTOMATED PROMPTS ---
+    st.markdown("##### ⚡ Quick Clinical Inquiries")
+    
+    # Lay out buttons horizontally using small columns
+    p_col1, p_col2, p_col3 = st.columns(3)
+    
+    suggested_prompt = None
+    
+    with p_col1:
+        if st.button("💡 Explain Findings", use_container_width=True):
+            suggested_prompt = "Can you break down the neural network's findings for this specific scan and explain what structural features led to this probability?"
+            
+    with p_col2:
+        if st.button("🩺 Triage Steps", use_container_width=True):
+            suggested_prompt = "What are the recommended immediate clinical triage steps and confirmatory testing pathways for this primary finding?"
+            
+    with p_col3:
+        if st.button("🔬 Opacity vs Pneumonia", use_container_width=True):
+            suggested_prompt = "What is the physiological difference between a general Lung Opacity and Viral Pneumonia on a chest radiograph?"
+
+    # Capture either a button click OR a manual typing input
+    user_prompt = st.chat_input("Inquire about this complex matrix breakdown...")
+    
+    if suggested_prompt:
+        user_prompt = suggested_prompt
+
     # Live Interaction Loop (Gemini Bridge)
-    if user_prompt := st.chat_input("Inquire about this complex matrix breakdown..."):
+    if user_prompt:
         with st.chat_message("user"):
             st.markdown(user_prompt)
             
@@ -112,7 +133,7 @@ with col2:
 
                     system_instruction = (
                         "You are an expert clinical AI radiologist assistant. "
-                        f"Current Case Analytical Context: {diagnostic_context}. "
+                        f"Current Case Analytical Context: {st.session_state.diagnostic_context}. "
                         "Instructions: Answer the clinician's or patient's queries thoroughly, with deep biochemical and structural explanations. "
                         "When discussing findings, highlight differences between ground-glass opacities (COVID-19), standard consolidations (Pneumonia), "
                         "and clear fields (Normal). Warn users that neural networks offer probabilities, not legal diagnoses, and must be verified by a physician."
@@ -140,3 +161,6 @@ with col2:
                     st.markdown(ai_reply)
                 
         st.session_state.messages.append({"role": "assistant", "content": ai_reply})
+        
+        # Rerun the app to cleanly refresh the chat UI state after a button push
+        st.rerun()
