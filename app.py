@@ -134,9 +134,10 @@ with col2:
                     system_instruction = (
                         "You are an expert clinical AI radiologist assistant. "
                         f"Current Case Analytical Context: {st.session_state.diagnostic_context}. "
-                        "Instructions: Answer the clinician's or patient's queries thoroughly, with deep biochemical and structural explanations. "
+                        "Instructions: Answer the clinician's or patient's queries thoroughly but concise manner, with biochemical and structural explanations that aren't extended too long. "
                         "When discussing findings, highlight differences between ground-glass opacities (COVID-19), standard consolidations (Pneumonia), "
                         "and clear fields (Normal). Warn users that neural networks offer probabilities, not legal diagnoses, and must be verified by a physician."
+                        
                     )
 
                     history_context = ""
