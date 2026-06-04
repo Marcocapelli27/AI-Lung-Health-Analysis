@@ -105,20 +105,27 @@ with col1:
             st.progress(float(score))
 
 # --- RIGHT SIDE: EXPERT CHAT SPACE (INDEPENDENTLY SCROLLABLE) ---
+# --- RIGHT SIDE: EXPERT CHAT SPACE ---
 with col2:
     st.subheader("💬 Expert Consult Chat")
     
+    # Initialize chat history memory
     if "messages" not in st.session_state:
         st.session_state.messages = [
             {"role": "assistant", "content": "Welcome to the clinical workspace. The multi-disease differential matrix has been initialized. Let's discuss structural differences or triage pathways."}
         ]
 
-    # Displays chat history
-    for message in st.session_state.messages:
-        with st.chat_message(message["role"]):
-            st.markdown(message["content"])
+    # 💡 NATIVE STREAMLIT FIX: Put the messages inside a fixed-height scrolling box (e.g., 550 pixels tall)
+    # This automatically creates an isolated scroll window just for the chat bubbles!
+    chat_container = st.container(height=550)
+    
+    with chat_container:
+        # Displays your rolling history inside the scrolling box
+        for message in st.session_state.messages:
+            with st.chat_message(message["role"]):
+                st.markdown(message["content"])
 
-    # --- ONE-CLICK AUTOMATED PROMPTS ---
+    # --- ONE-CLICK AUTOMATED PROMPTS (Stays cleanly below the scrolling chat) ---
     st.markdown("##### ⚡ Quick Clinical Inquiries")
     p_col1, p_col2, p_col3 = st.columns(3)
     suggested_prompt = None
@@ -141,46 +148,47 @@ with col2:
 
     # Live Interaction Loop (Gemini Bridge)
     if user_prompt:
-        with st.chat_message("user"):
-            st.markdown(user_prompt)
-            
+        # Append user message instantly
         st.session_state.messages.append({"role": "user", "content": user_prompt})
         
-        with st.chat_message("assistant"):
-            with st.spinner("Consulting Clinical AI Knowledge Base..."):
-                try:
-                    api_key = st.secrets["GEMINI_API_KEY"]
-                    url = f"https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key={api_key}"
+        # We temporarily show a spinner while rendering the API call response
+        with chat_container:
+            with st.chat_message("user"):
+                st.markdown(user_prompt)
+            with st.chat_message("assistant"):
+                with st.spinner("Consulting Clinical AI Knowledge Base..."):
+                    try:
+                        api_key = st.secrets["GEMINI_API_KEY"]
+                        url = f"https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key={api_key}"
 
-                    # NEW UPDATED COMPACT SYSTEM INSTRUCTION
-                    system_instruction = (
-                        "You are a concise clinical AI radiologist. "
-                        f"Current Case Analytical Context: {st.session_state.diagnostic_context}. "
-                        "Instructions: Answer the clinician's or patient's queries thoroughly but concise manner, with biochemical and structural explanations that aren't extended too long. "
+                        system_instruction = (
+                            "You are a concise clinical AI radiologist. "
+                            f"Current Case Analytical Context: {st.session_state.diagnostic_context}. "
+                            "Instructions: Answer the clinician's or patient's queries thoroughly but concise manner, with biochemical and structural explanations that aren't extended too long. "
                         "When discussing findings, highlight differences between ground-glass opacities (COVID-19), standard consolidations (Pneumonia), "
-                        "and clear fields (Normal). Warn users that neural networks offer probabilities, not legal diagnoses, and must be verified by a physician."
-                    )
+                        "and clear fields (Normal). Warn users that neural networks offer probabilities, not legal diagnoses, and must be verified by a physician" 
+                        )
 
-                    history_context = ""
-                    for msg in st.session_state.messages[:-1]:
-                        history_context += f"{msg['role'].upper()}: {msg['content']}\n"
+                        history_context = ""
+                        for msg in st.session_state.messages[:-1]:
+                            history_context += f"{msg['role'].upper()}: {msg['content']}\n"
 
-                    payload = {
-                        "contents": [{
-                            "parts": [{
-                                "text": f"{system_instruction}\n\nChat History:\n{history_context}\nUser Question: {user_prompt}"
+                        payload = {
+                            "contents": [{
+                                "parts": [{
+                                    "text": f"{system_instruction}\n\nChat History:\n{history_context}\nUser Question: {user_prompt}"
+                                }]
                             }]
-                        }]
-                    }
-                    
-                    response = requests.post(url, headers={'Content-Type': 'application/json'}, data=json.dumps(payload))
-                    ai_reply = response.json()['candidates'][0]['content']['parts'][0]['text']
-                    st.markdown(ai_reply)
+                        }
+                        
+                        response = requests.post(url, headers={'Content-Type': 'application/json'}, data=json.dumps(payload))
+                        ai_reply = response.json()['candidates'][0]['content']['parts'][0]['text']
+                        st.markdown(ai_reply)
 
-                except Exception as e:
-                    ai_reply = "Connection disruption with the cloud knowledge base matrix."
-                    st.error(f"Trace: {e}")
-                    st.markdown(ai_reply)
-                
+                    except Exception as e:
+                        ai_reply = "Connection disruption with the cloud knowledge base matrix."
+                        st.error(f"Trace: {e}")
+                        st.markdown(ai_reply)
+                    
         st.session_state.messages.append({"role": "assistant", "content": ai_reply})
         st.rerun()
