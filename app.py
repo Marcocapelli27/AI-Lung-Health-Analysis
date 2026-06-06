@@ -8,7 +8,7 @@ import json
 # --- Page Setup ---
 st.set_page_config(page_title="Multi-Disease AI Radiology Space", page_icon="🫁", layout="wide")
 
-st.title("🫁 Advanced Multi-Disease Chest X-Ray Analyzer")
+st.title("Advanced Multi-Disease Chest X-Ray Analyzer")
 st.write("Clinical decision support system providing deep visual feature extraction and differential diagnosis for acute thoracic conditions.")
 
 st.markdown("---")
